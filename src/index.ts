@@ -14,40 +14,42 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
-// Ендпоінт: список елементів (два варіанти)
-app.get("/api/list/:type", (req: Request<{ type: string }>, res: Response) => {
-  const lists: Record<string, string[]> = {
-    fruits: ["Яблуко", "Банан", "Манго", "Ківі", "Апельсин"],
-    animals: ["Кіт", "Пес", "Лисиця", "Ведмідь", "Заєць"],
-  };
-  const data = lists[req.params.type] || lists.fruits;
-  res.json({ items: data, type: req.params.type });
+const mimeTypes: { [key: string]: string } = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+};
+
+// Отримання списку доступних зображень для певної категорії
+app.get("/api/list/:type/images", (req: Request<{ type: string }>, res: Response) => {
+  const { type } = req.params;
+  const typeDir = path.join(IMAGES_DIR, type);
+
+  if (!fs.existsSync(typeDir)) {
+    res.status(404).json({ error: "Категорію зображень не знайдено" });
+    return;
+  }
+
+  try {
+    const files = fs.readdirSync(typeDir).filter((f) =>
+      [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(
+        path.extname(f).toLowerCase()
+      )
+    );
+    res.json({ images: files });
+  } catch {
+    res.status(500).json({ error: "Не вдалося прочитати папку зображень" });
+  }
 });
 
-// Отримання конкретного зображення за типом
-app.get("/api/list/:type/images/:filename", (req: Request<{ type: string; filename: string }>, res: Response) => {
+// Отримання конкретного зображення
+app.get("/api/image/:type/:filename", (req: Request<{ type: string; filename: string }>, res: Response) => {
   const { type, filename } = req.params;
   const filePath = path.join(IMAGES_DIR, type, filename);
 
-  if (!filePath.startsWith(IMAGES_DIR)) {
-    res.status(400).json({ error: "Неприпустимий шлях" });
-    return;
-  }
-
-  if (!fs.existsSync(filePath)) {
-    res.status(404).json({ error: "Зображення не знайдено" });
-    return;
-  }
-
-  const ext = path.extname(filename).toLowerCase();
-  const mimeTypes: Record<string, string> = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".gif": "image/gif",
-    ".webp": "image/webp",
-  };
-
+  const ext = path.extname(filePath).toLowerCase();
   const contentType = mimeTypes[ext] || "application/octet-stream";
   const buffer = fs.readFileSync(filePath);
 
@@ -56,6 +58,12 @@ app.get("/api/list/:type/images/:filename", (req: Request<{ type: string; filena
   res.setHeader("Cache-Control", "public, max-age=3600");
   res.send(buffer);
 });
+
+// Роздаємо статичні файли з папки images за префіксом /images
+// maxAge встановлює заголовок Cache-Control (в мілісекундах)
+app.use("/images", express.static(IMAGES_DIR, {
+  maxAge: 3600000 
+}));
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: "Маршрут не знайдено" });
