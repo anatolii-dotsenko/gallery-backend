@@ -59,6 +59,23 @@ app.get("/api/image/:type/:filename", (req: Request<{ type: string; filename: st
   res.send(buffer);
 });
 
+// Отримання текстового списку (фрукти або тварини)
+app.get("/api/list/:type", (req: Request<{ type: string }>, res: Response) => {
+  const lists: Record<string, string[]> = {
+    fruits: ["Яблуко", "Банан", "Манго", "Ківі", "Апельсин"],
+    animals: ["Кіт", "Пес", "Лисиця", "Ведмідь", "Заєць"],
+  };
+  
+  const type = req.params.type;
+  const data = lists[type];
+
+  if (data) {
+    res.json({ items: data, type });
+  } else {
+    res.status(404).json({ error: "Список не знайдено" });
+  }
+});
+
 // Роздаємо статичні файли з папки images за префіксом /images
 // maxAge встановлює заголовок Cache-Control (в мілісекундах)
 app.use("/images", express.static(IMAGES_DIR, {
