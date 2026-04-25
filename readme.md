@@ -8,3 +8,4 @@ if path not specified:
 http://localhost:3000/images
 ## Display image
 http://localhost:3000/images/Shrek.jpg
+<img width="1874" height="800" alt="image" src="https://github.com/user-attachments/assets/7e9f61a4-00db-4fbe-8501-10a3a7662d1e" />
