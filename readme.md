@@ -1,3 +1,5 @@
+# Get dependencies
+npm install
 ## Build and run
 npm run build && npm start
 ##
