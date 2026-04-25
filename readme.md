@@ -10,3 +10,6 @@ if path not specified:
 http://localhost:3000/images
 ## Display image
 http://localhost:3000/images/Shrek.jpg
+
+/api/list/fruits → повертає список фруктів
+/api/list/animals → повертає список тварин
