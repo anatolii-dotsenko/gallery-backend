@@ -16,3 +16,6 @@ cd server
 npm install
 npm run build
 npm start
+```
+### Screenshot of test results
+<img width="570" height="244" alt="image" src="https://github.com/user-attachments/assets/762ba511-6aff-4596-bc36-3e1ca86751a4" />
