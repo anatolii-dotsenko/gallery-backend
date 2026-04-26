@@ -29,3 +29,4 @@ http://localhost:3000
 npm test
 ```
 ### Screenshots
+<img width="571" height="239" alt="image" src="https://github.com/user-attachments/assets/4f05e57e-0541-4433-b319-e9c8348a81d7" />
