@@ -14,7 +14,7 @@ describe("FileService", () => {
     ]);
 
     const service = new FileService();
-    const result = service.listImages();
+    const result = service.listImages("fruits");
     expect(result).toEqual(["photo.jpg", "image.png"]);
   });
 });
