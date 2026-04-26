@@ -1,4 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import fs from "fs";
 import path from "path";
 import { log } from "./logger.js";
@@ -8,6 +10,13 @@ const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 const PORT = 3000;
 const IMAGES_DIR = path.join(process.cwd(), "images");
+
+// Створення HTTP сервера та Socket.IO
+const httpServer = createServer(app);
+const io = new Server(httpServer, { cors: { origin: "*" } });
+
+// Спільний стан для слайдера
+let sliderValue = 50;
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
   log(`${req.method} ${req.url}`);
@@ -91,6 +100,26 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   res.status(500).json({ error: "Внутрішня помилка сервера" });
 });
 
-app.listen(PORT, () => {
+// Обробка Socket.IO з'єднань
+io.on("connection", (socket) => {
+  log(`Клієнт підключився: ${socket.id}`);
+
+  // Надіслати поточне значення новому клієнту
+  socket.emit("slider:sync", sliderValue);
+
+  // Отримати зміну від клієнта
+  socket.on("slider:change", (value: number) => {
+    sliderValue = value;
+    // Транслювати ІНШИМ клієнтам (не відправнику!)
+    socket.broadcast.emit("slider:sync", value);
+  });
+
+  socket.on("disconnect", () => {
+    log(`Клієнт від'єднався: ${socket.id}`);
+  });
+});
+
+// Запуск HTTP сервера
+httpServer.listen(PORT, () => {
   log(`Сервер запущено на http://localhost:${PORT}`);
 });
