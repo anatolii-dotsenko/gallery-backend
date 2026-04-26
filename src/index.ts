@@ -13,6 +13,9 @@ import { container } from "./container";
 import { connectDB, getBucket, uploadImage, listImages, deleteImage } from "./db-gridfs";
 import type { IContentService } from "./services/IContentService";
 import type { IFileService } from "./services/IFileService"; 
+// --- Імпорти для MVC Контролерів ---
+import "./controllers/ImagesController"; 
+import { getRouters } from "./decorators/controller";
 // Налаштування Multer для тимчасового зберігання файлів
 const upload = multer({ dest: "tmp/" });
 
@@ -103,17 +106,21 @@ app.get("/api/list/:type/images", (req: Request<{ type: string }>, res: Response
     res.status(500).json({ error: "Не вдалося прочитати папку зображень" });
   }
 });
-// Отримання текстового списку (фрукти або тварини)
-app.get("/api/list/:type", (req: Request<{ type: string }>, res: Response) => {
-  const type = req.params.type as "fruits" | "animals";
+// Отримання текстового списку (фрукти або тварини) deprecated (mvc)
+// app.get("/api/list/:type", (req: Request<{ type: string }>, res: Response) => {
+//   const type = req.params.type as "fruits" | "animals";
   
-  try {
-    // Отримуємо сервіс динамічно з контейнера за ключем
-    const service = container.resolve<IContentService>(type);
-    res.json({ items: service.getList(), type });
-  } catch (error) {
-    res.status(404).json({ error: "Сервіс для цього типу не знайдено" });
-  }
+//   try {
+//     // Отримуємо сервіс динамічно з контейнера за ключем
+//     const service = container.resolve<IContentService>(type);
+//     res.json({ items: service.getList(), type });
+//   } catch (error) {
+//     res.status(404).json({ error: "Сервіс для цього типу не знайдено" });
+//   }
+// });
+// --- Реєстрація MVC маршрутів ---
+getRouters().forEach((router, prefix) => {
+  app.use(prefix, router);
 });
 
 // Статичні файли (для папки images на диску)
