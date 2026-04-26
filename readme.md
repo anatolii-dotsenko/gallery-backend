@@ -13,3 +13,4 @@ http://localhost:3000/images/Shrek.jpg
 
 /api/list/fruits → повертає список фруктів
 /api/list/animals → повертає список тварин
+<img width="3840" height="2110" alt="image" src="https://github.com/user-attachments/assets/4176f7c5-8b47-4002-bf2f-7a8f2b01691d" />
