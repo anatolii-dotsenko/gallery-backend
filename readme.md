@@ -1,15 +1,18 @@
-#26 front-end DI
-# Get dependencies
+# lab27. Client-Server App: Dependency Injection & Testing
+
+This project demonstrates a full-stack implementation of **Dependency Injection (DI)** using TypeScript, React, Node.js, and Socket.IO, along with Unit Testing.
+
+## Technologies Used
+- **Backend (Node.js/Express):** `tsyringe` for DI. The app resolves services (`FileService`, `ContentService`) from a central DI container.
+- **Testing:** `jest` and `ts-jest` for unit testing the backend services with mocked file system (`fs`) dependencies.
+- **Frontend (React):** `inversify`, `reflect-metadata` for DI. Logic is delegated to injectable services (`ApiService`, `ListRenderer`).
+https://github.com/anatolii-dotsenko/react-client
+
+## How to Run
+
+### 1. Start the Server
+```bash
+cd server
 npm install
-## Build and run
-npm run build && npm start
-## Server at:
-http://localhost:3000
-## API
-/api/list/fruits → fruits list
-/api/list/animals → animals list
-## Display image
-http://localhost:3000/images/Shrek.jpg
-
-
-<img width="3840" height="2110" alt="image" src="https://github.com/user-attachments/assets/4176f7c5-8b47-4002-bf2f-7a8f2b01691d" />
+npm run build
+npm start
