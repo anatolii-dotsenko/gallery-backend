@@ -7,9 +7,9 @@ import multer from "multer";
 import fs from "fs";
 import cors from "cors";
 import mongoose from "mongoose";
+
 // Локальні імпорти
 import { log } from "./logger.js";
-import { container } from "./container";
 import {
   connectDB,
   getBucket,
@@ -17,12 +17,11 @@ import {
   listImages,
   deleteImage,
 } from "./db-gridfs";
-import type { IContentService } from "./services/IContentService";
-import type { IFileService } from "./services/IFileService";
-// --- Імпорти для MVC Контролерів ---
+
+// --- Імпорти для MVC Контролерів (реєструються автоматично завдяки декораторам) ---
 import "./controllers/ImagesController";
+import "./controllers/AuthController"; // Просто імпортуємо файл, декоратори зроблять свою справу!
 import { getRouters } from "./decorators/controller";
-import { AuthController } from "./controllers/AuthController";
 
 // Налаштування Multer для тимчасового зберігання файлів
 const upload = multer({ dest: "tmp/" });
@@ -31,7 +30,8 @@ const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
-const PORT = 3000;
+// Беремо порт з .env або використовуємо 3001 за замовчуванням
+const PORT = process.env.PORT || 3001;
 const IMAGES_DIR = path.join(process.cwd(), "images");
 
 // Підключення до MongoDB
@@ -49,7 +49,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
-// --- Маршрути для MongoDB GridFS ---
+// --- Маршрути для MongoDB GridFS (Галерея) ---
 
 // 1. Завантаження зображення в БД
 app.post(
@@ -81,13 +81,11 @@ app.get("/api/images", async (_req: Request, res: Response) => {
 });
 
 // 3. Отримати конкретне зображення з GridFS за ID
-// Додаємо <{ id: string }>, щоб виправити помилку "string | string[]"
 app.get(
   "/api/images/:id",
   async (req: Request<{ id: string }>, res: Response) => {
     try {
       const bucket = getBucket();
-      // Використовуємо mongoose.mongo.ObjectId
       bucket
         .openDownloadStream(new mongoose.mongo.ObjectId(req.params.id))
         .pipe(res);
@@ -110,47 +108,13 @@ app.delete(
   },
 );
 
-// --- Маршрути з використанням Dependency Injection (tsyringe) ---
-// Отримання списку доступних статичних зображень (фрукти/тварини)
-app.get(
-  "/api/list/:type/images",
-  (req: Request<{ type: string }>, res: Response) => {
-    const { type } = req.params;
-    try {
-      const fileService = container.resolve<IFileService>("IFileService");
-      const files = fileService.listImages(type);
-
-      if (files.length === 0) {
-        res
-          .status(404)
-          .json({ error: "Категорію зображень не знайдено або папка порожня" });
-        return;
-      }
-
-      res.json({ images: files });
-    } catch (error) {
-      res.status(500).json({ error: "Не вдалося прочитати папку зображень" });
-    }
-  },
-);
-// Отримання текстового списку (фрукти або тварини) deprecated (mvc)
-// app.get("/api/list/:type", (req: Request<{ type: string }>, res: Response) => {
-//   const type = req.params.type as "fruits" | "animals";
-
-//   try {
-//     // Отримуємо сервіс динамічно з контейнера за ключем
-//     const service = container.resolve<IContentService>(type);
-//     res.json({ items: service.getList(), type });
-//   } catch (error) {
-//     res.status(404).json({ error: "Сервіс для цього типу не знайдено" });
-//   }
-// });
 // --- Реєстрація MVC маршрутів ---
+// Ця магія автоматично підтягує всі роути з AuthController та ImagesController
 getRouters().forEach((router, prefix) => {
   app.use(prefix, router);
 });
 
-// Статичні файли (для папки images на диску)
+// Статичні файли (якщо залишились якісь базові картинки на диску)
 app.use(
   "/images",
   express.static(IMAGES_DIR, {
