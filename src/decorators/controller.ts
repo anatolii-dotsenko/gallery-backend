@@ -51,6 +51,20 @@ export function Post(path: string) {
   };
 }
 
+export function Patch(path: string) {
+  return function (target: any, propertyKey: string) {
+    const routes = Reflect.getMetadata("routes", target) || [];
+    let route = routes.find((r: any) => r.handler === propertyKey);
+    if (!route) {
+      route = { handler: propertyKey, middlewares: [] };
+      routes.push(route);
+    }
+    route.method = "patch";
+    route.path = path;
+    Reflect.defineMetadata("routes", routes, target);
+  };
+}
+
 export function Delete(path: string) {
   return function (target: any, propertyKey: string) {
     const routes = Reflect.getMetadata("routes", target) || [];
