@@ -14,10 +14,18 @@ export function getBucket() {
   });
 }
 
-export async function uploadImage(filePath: string, filename: string) {
+export async function uploadImage(
+  filePath: string,
+  filename: string,
+  mimeType: string,
+  userId: string,
+) {
   const bucket = getBucket();
   const readStream = fs.createReadStream(filePath);
-  const uploadStream = bucket.openUploadStream(filename);
+  const uploadStream = bucket.openUploadStream(filename, {
+    contentType: mimeType,
+    metadata: { userId, uploadedAt: new Date() }, // ВАЖЛИВО: зберігаємо власника
+  });
   readStream.pipe(uploadStream);
 
   return new Promise((resolve, reject) => {
@@ -26,9 +34,10 @@ export async function uploadImage(filePath: string, filename: string) {
   });
 }
 
-export async function listImages() {
+export async function listImages(userId: string) {
   const bucket = getBucket();
-  return bucket.find({}).toArray();
+  // Фільтруємо зображення лише для конкретного користувача
+  return bucket.find({ "metadata.userId": userId }).toArray();
 }
 
 export async function deleteImage(id: string) {
