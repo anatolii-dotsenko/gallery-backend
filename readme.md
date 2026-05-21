@@ -1,22 +1,30 @@
-# Навчальна практика
+# Key Features
+- Account System: Registration and authorization using JWT tokens. Secure password hashing with bcrypt.
+- Personalized Galleries: Each user has access exclusively to their own uploaded images.
+- Storage Quotas: Automatic tracking of used space. Storage is limited to 500 MB per user.
+- File Storage: Utilizes MongoDB GridFS for streaming media files directly into the database, keeping the local disk clean.
+- Real-time Interaction: Synchronization of UI elements like the image slider between connected clients using Socket.io.
+- User Interface: Responsive React interface with support for protected routes and a dark and light theme toggle.
 
-## Technologies Used
-* **Сервер:** Node.js + Express
-* **Мова:** TypeScript
-* **База даних:** MongoDB (`mongoose`, `mongodb`) з використанням **GridFS** для збереження зображень більших розмірів.
-* **Обробка файлів:** `multer` (для прийому файлів від клієнта перед збереженням у БД).
-* **Dependency Injection:** `tsyringe` та `reflect-metadata` (забезпечує слабку зв'язність сервісів `IFileService`, `IContentService`).
-* **Real-time зв'язок:** `socket.io` (передача стану слайдера всім підключеним клієнтам).
-* **Тестування:** `jest` + `ts-jest` (юніт-тестування сервісів із використанням моків, наприклад, модулю `fs`).
+## Tech Stack for Backend
+
+- Node.js and Express for the server environment.
+- TypeScript for typing and object-oriented architecture using custom decorators.
+- MongoDB and Mongoose for the database and object data modeling.
+- GridFS for storing large binary files.
+- Socket.io for websockets.
+- JWT and Bcrypt for security and authorization.
+- Multer for handling multipart form data.
 
 ## How to Run
-### Для коректної роботи завантаження файлів необхідно, щоб на вашому комп'ютері була запущена локальна база даних **MongoDB** (стандартний порт `27017`).
+### Prerequisites include having Node.js installed and a local MongoDB server running on port 27017.
 ```bash
 docker run -d -p 27017:27017 --name my-mongodb mongo:latest
 ```
 ### Start the Server
 ```bash
-cd server
+cd Backend
+cp .env.example .env #set JWT_SECRET to your secret if needed
 npm install
 npm run build
 npm start
@@ -26,6 +34,8 @@ http://localhost:3000
 ```bash
 npm test
 ```
+### Project structure
+- The project is divided into two independent parts that communicate via a REST API. The backend folder contains the MVC architecture of controllers, services, Mongoose models, and GridFS logic. The frontend folder contains React components, the Context API for managing authorization state, and services for API access.
 ### React Client
 https://github.com/anatolii-dotsenko/react-client/tree/feature/gallery-app
 
