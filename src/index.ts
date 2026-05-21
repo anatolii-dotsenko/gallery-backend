@@ -4,28 +4,16 @@ import express, { Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
-import multer from "multer";
-import fs from "fs";
 import cors from "cors";
-import mongoose from "mongoose";
 
 // Локальні імпорти
 import { log } from "./logger.js";
-import {
-  connectDB,
-  getBucket,
-  uploadImage,
-  listImages,
-  deleteImage,
-} from "./db-gridfs";
+import { connectDB } from "./db-gridfs";
 
 // --- Імпорти для MVC Контролерів (реєструються автоматично завдяки декораторам) ---
 import "./controllers/ImagesController";
 import "./controllers/AuthController"; // Просто імпортуємо файл, декоратори зроблять свою справу!
 import { getRouters } from "./decorators/controller";
-
-// Налаштування Multer для тимчасового зберігання файлів
-const upload = multer({ dest: "tmp/" });
 
 const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
@@ -49,65 +37,6 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   log(`${req.method} ${req.url}`);
   next();
 });
-
-// --- Маршрути для MongoDB GridFS (Галерея) ---
-
-// 1. Завантаження зображення в БД
-app.post(
-  "/api/images",
-  upload.single("image"),
-  async (req: Request, res: Response): Promise<void> => {
-    if (!req.file) {
-      res.status(400).json({ error: "Файл не надано" });
-      return;
-    }
-    try {
-      await uploadImage(req.file.path, req.file.originalname);
-      fs.unlinkSync(req.file.path); // Видаляємо тимчасовий файл після завантаження в БД
-      res.json({ message: "Завантажено в GridFS" });
-    } catch (error) {
-      res.status(500).json({ error: "Помилка завантаження в БД" });
-    }
-  },
-);
-
-// 2. Список зображень у GridFS
-app.get("/api/images", async (_req: Request, res: Response) => {
-  try {
-    const files = await listImages();
-    res.json(files.map((f: any) => ({ id: f._id, name: f.filename })));
-  } catch (error) {
-    res.status(500).json({ error: "Помилка отримання списку з БД" });
-  }
-});
-
-// 3. Отримати конкретне зображення з GridFS за ID
-app.get(
-  "/api/images/:id",
-  async (req: Request<{ id: string }>, res: Response) => {
-    try {
-      const bucket = getBucket();
-      bucket
-        .openDownloadStream(new mongoose.mongo.ObjectId(req.params.id))
-        .pipe(res);
-    } catch (error) {
-      res.status(404).json({ error: "Зображення в БД не знайдено" });
-    }
-  },
-);
-
-// 4. Видалити зображення з GridFS
-app.delete(
-  "/api/images/:id",
-  async (req: Request<{ id: string }>, res: Response) => {
-    try {
-      await deleteImage(req.params.id);
-      res.json({ message: "Видалено з GridFS" });
-    } catch (error) {
-      res.status(500).json({ error: "Помилка видалення з БД" });
-    }
-  },
-);
 
 // --- Реєстрація MVC маршрутів ---
 // Ця магія автоматично підтягує всі роути з AuthController та ImagesController
