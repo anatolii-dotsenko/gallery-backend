@@ -37,6 +37,5 @@ npm test
 ### Project structure
 - The project is divided into two independent parts that communicate via a REST API. The backend folder contains the MVC architecture of controllers, services, Mongoose models, and GridFS logic. The frontend folder contains React components, the Context API for managing authorization state, and services for API access.
 ### React Client
-https://github.com/anatolii-dotsenko/react-client/tree/feature/gallery-app
-
+https://github.com/anatolii-dotsenko/gallery-frontend
 ### Screenshots
