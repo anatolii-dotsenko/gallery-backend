@@ -1,4 +1,5 @@
 import "reflect-metadata"; // ОБОВ'ЯЗКОВО ПЕРШИМ імпортом
+import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -30,8 +31,8 @@ const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
-// Беремо порт з .env або використовуємо 3001 за замовчуванням
-const PORT = process.env.PORT || 3001;
+// Беремо порт з .env або використовуємо 3000 за замовчуванням
+const PORT = process.env.PORT || 3000;
 const IMAGES_DIR = path.join(process.cwd(), "images");
 
 // Підключення до MongoDB

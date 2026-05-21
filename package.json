@@ -16,6 +16,7 @@
     "@types/cors": "^2.8.19",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "gridfs-stream": "^1.1.1",
     "inversify": "^8.1.0",

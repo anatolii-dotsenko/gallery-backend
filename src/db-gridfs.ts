@@ -2,12 +2,16 @@ import mongoose from "mongoose";
 import fs from "fs";
 
 export async function connectDB() {
-  await mongoose.connect("mongodb://localhost:27017/lab28");
-  console.log("MongoDB підключено");
+  // Якщо в .env є рядок підключення — беремо його, інакше — дефолтний
+  const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/lab28";
+  await mongoose.connect(uri);
+  console.log(`MongoDB підключено до: ${uri}`);
 }
 
 export function getBucket() {
-  return new mongoose.mongo.GridFSBucket(mongoose.connection.db!, { bucketName: "images" });
+  return new mongoose.mongo.GridFSBucket(mongoose.connection.db!, {
+    bucketName: "images",
+  });
 }
 
 export async function uploadImage(filePath: string, filename: string) {
@@ -15,7 +19,7 @@ export async function uploadImage(filePath: string, filename: string) {
   const readStream = fs.createReadStream(filePath);
   const uploadStream = bucket.openUploadStream(filename);
   readStream.pipe(uploadStream);
-  
+
   return new Promise((resolve, reject) => {
     uploadStream.on("finish", resolve);
     uploadStream.on("error", reject);
