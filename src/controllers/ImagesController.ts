@@ -80,7 +80,8 @@ export class ImagesController {
   @UseMiddleware(authMiddleware)
   async deleteImg(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const fileId = new mongoose.mongo.ObjectId(req.params.id);
+      // Виправлення 1: явно вказуємо as string
+      const fileId = new mongoose.mongo.ObjectId(req.params.id as string);
       const bucket = getBucket();
       const file = await bucket.find({ _id: fileId }).toArray();
 
@@ -94,7 +95,8 @@ export class ImagesController {
 
       // Повертаємо місце користувачеві
       if (file[0].length) {
-        await UserService.updateStorageUsed(req.userId, -file[0].length);
+        // Виправлення 2: додаємо знак оклику (req.userId!)
+        await UserService.updateStorageUsed(req.userId!, -file[0].length);
       }
 
       res.json({ success: true, message: "Видалено з GridFS" });

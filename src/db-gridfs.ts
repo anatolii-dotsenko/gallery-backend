@@ -22,10 +22,16 @@ export async function uploadImage(
 ) {
   const bucket = getBucket();
   const readStream = fs.createReadStream(filePath);
+
+  // Виправлення 3: перенесли contentType всередину metadata
   const uploadStream = bucket.openUploadStream(filename, {
-    contentType: mimeType,
-    metadata: { userId, uploadedAt: new Date() }, // ВАЖЛИВО: зберігаємо власника
+    metadata: {
+      userId,
+      uploadedAt: new Date(),
+      contentType: mimeType,
+    },
   });
+
   readStream.pipe(uploadStream);
 
   return new Promise((resolve, reject) => {
