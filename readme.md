@@ -1,7 +1,5 @@
 # Навчальна практика
 
-todo
-
 ## Technologies Used
 * **Сервер:** Node.js + Express
 * **Мова:** TypeScript
@@ -28,4 +26,7 @@ http://localhost:3000
 ```bash
 npm test
 ```
+### React Client
+https://github.com/anatolii-dotsenko/react-client/tree/feature/gallery-app
+
 ### Screenshots
