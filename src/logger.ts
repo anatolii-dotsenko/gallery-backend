@@ -1,11 +1,33 @@
-import fs from "fs";
-import path from "path";
+import winston from "winston";
 
-const logFile = path.join(process.cwd(), "server.log");
+/**
+ * Конфігурація професійного логера з використанням Winston.
+ * Підтримує запис у файл (асинхронно) та вивід у консоль.
+ */
+export const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json(),
+  ),
+  transports: [
+    new winston.transports.File({ filename: "error.log", level: "error" }),
+    new winston.transports.File({ filename: "server.log" }),
+  ],
+});
 
+if (process.env.NODE_ENV !== "production") {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple(),
+      ),
+    }),
+  );
+}
+
+// old func for compatibility: todo
 export function log(message: string): void {
-  const timestamp = new Date().toISOString();
-  const line = `[${timestamp}] ${message}`;
-  console.log(line);
-  fs.appendFileSync(logFile, line + "\n");
+  logger.info(message);
 }

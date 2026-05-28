@@ -1,5 +1,9 @@
 import "reflect-metadata"; // ОБОВ'ЯЗКОВО ПЕРШИМ імпортом
 import "dotenv/config";
+
+// ДОДАНО: Імпортуємо налаштування DI-контейнера до того, як завантажаться контролери!
+import "./container";
+
 import express, { Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -7,12 +11,12 @@ import path from "path";
 import cors from "cors";
 
 // Локальні імпорти
-import { log } from "./logger.js";
+import { log } from "./logger"; // Тепер тут працює winston
 import { connectDB } from "./db-gridfs";
 
-// --- Імпорти для MVC Контролерів (реєструються автоматично завдяки декораторам) ---
+// --- Імпорти для MVC Контролерів ---
 import "./controllers/ImagesController";
-import "./controllers/AuthController"; // Просто імпортуємо файл, декоратори зроблять свою справу!
+import "./controllers/AuthController";
 import { getRouters } from "./decorators/controller";
 
 const app = express();
