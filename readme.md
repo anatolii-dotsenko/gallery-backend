@@ -31,6 +31,11 @@ npm start
 http://localhost:3000
 ```
 ### Tests
+The project features a robust testing architecture that ensures reliability and separates business logic from database interactions:
+
+Unit Tests: Isolated testing of individual services (e.g., AuthService, FileService) using Jest mocks. This ensures business logic is correct without the overhead of database connections.
+
+E2E / Integration Tests: Comprehensive testing of API endpoints using Supertest and mongodb-memory-server. This simulates real HTTP requests and database interactions using an in-memory database, completely safely and without affecting production data.
 ```bash
 npm test
 ```
