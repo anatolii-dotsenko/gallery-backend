@@ -37,7 +37,8 @@ Unit Tests: Isolated testing of individual services (e.g., AuthService, FileServ
 
 E2E / Integration Tests: Comprehensive testing of API endpoints using Supertest and mongodb-memory-server. This simulates real HTTP requests and database interactions using an in-memory database, completely safely and without affecting production data.
 ```bash
-npm test
+npm test -- auth.e2e.test.ts
+npm test -- AuthService.test.ts
 ```
 ### Project structure
 - The project is divided into two independent parts that communicate via a REST API. The backend folder contains the MVC architecture of controllers, services, Mongoose models, and GridFS logic. The frontend folder contains React components, the Context API for managing authorization state, and services for API access.
