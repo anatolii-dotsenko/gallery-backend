@@ -1,50 +1,50 @@
-import "reflect-metadata"; // ОБОВ'ЯЗКОВО ПЕРШИМ імпортом
+import "reflect-metadata"; // MUST BE THE FIRST IMPORT
 import "dotenv/config";
+
+// Initialize DI container before loading controllers!
+import "./container";
+
 import express, { Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import path from "path";
 import cors from "cors";
 
-// Локальні імпорти
-import { log } from "./logger.js";
+// Local imports
+import { log } from "./logger"; // Winston logger is used here
 import { connectDB } from "./db-gridfs";
 
-// --- Імпорти для MVC Контролерів (реєструються автоматично завдяки декораторам) ---
+// --- MVC Controllers imports ---
 import "./controllers/ImagesController";
-import "./controllers/AuthController"; // Просто імпортуємо файл, декоратори зроблять свою справу!
+import "./controllers/AuthController";
 import { getRouters } from "./decorators/controller";
 
 const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
-// Беремо порт з .env або використовуємо 3000 за замовчуванням
+// Get port from .env or use 3000 as default
 const PORT = process.env.PORT || 3000;
 const IMAGES_DIR = path.join(process.cwd(), "images");
 
-// Підключення до MongoDB
-connectDB().catch((err: any) =>
-  console.error("Помилка підключення до MongoDB:", err),
-);
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: "*" } });
 
 let sliderValue = 50;
 
-// Middleware для логування
+// Logging middleware
 app.use((req: Request, _res: Response, next: NextFunction) => {
   log(`${req.method} ${req.url}`);
   next();
 });
 
-// --- Реєстрація MVC маршрутів ---
-// Ця магія автоматично підтягує всі роути з AuthController та ImagesController
+// --- MVC Routes Registration ---
+// Automatically loads all routes from registered controllers
 getRouters().forEach((router, prefix) => {
   app.use(prefix, router);
 });
 
-// Статичні файли (якщо залишились якісь базові картинки на диску)
+// Static files (for any remaining basic images on disk)
 app.use(
   "/images",
   express.static(IMAGES_DIR, {
@@ -52,20 +52,20 @@ app.use(
   }),
 );
 
-// Обробка 404
+// 404 Handler
 app.use((_req: Request, res: Response) => {
-  res.status(404).json({ error: "Маршрут не знайдено" });
+  res.status(404).json({ error: "Route not found" });
 });
 
-// Глобальний обробник помилок
+// Global error handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   log(`ERROR: ${err.message}`);
-  res.status(500).json({ error: "Внутрішня помилка сервера" });
+  res.status(500).json({ error: "Internal server error" });
 });
 
-// --- Логіка Socket.IO ---
+// --- Socket.IO Logic ---
 io.on("connection", (socket) => {
-  log(`Клієнт підключився: ${socket.id}`);
+  log(`Client connected: ${socket.id}`);
   socket.emit("slider:sync", sliderValue);
 
   socket.on("slider:change", (value: number) => {
@@ -74,11 +74,25 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    log(`Клієнт від'єднався: ${socket.id}`);
+    log(`Client disconnected: ${socket.id}`);
   });
 });
 
-// Запуск сервера
-httpServer.listen(PORT, () => {
-  log(`Сервер запущено на http://localhost:${PORT}`);
-});
+// ==========================================
+// START SERVER & DATABASE
+// Only if not in a testing environment
+// ==========================================
+if (process.env.NODE_ENV !== "test") {
+  // Connect to MongoDB
+  connectDB().catch((err: any) =>
+    console.error("MongoDB connection error:", err),
+  );
+
+  // Start the HTTP server
+  httpServer.listen(PORT, () => {
+    log(`Server started on http://localhost:${PORT}`);
+  });
+}
+
+// Export app for testing (Supertest)
+export { app };

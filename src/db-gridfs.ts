@@ -19,23 +19,28 @@ export async function uploadImage(
   filename: string,
   mimeType: string,
   userId: string,
-) {
+  albumId?: string,
+): Promise<mongoose.mongo.ObjectId> {
   const bucket = getBucket();
   const readStream = fs.createReadStream(filePath);
 
-  // Виправлення 3: перенесли contentType всередину metadata
-  const uploadStream = bucket.openUploadStream(filename, {
-    metadata: {
-      userId,
-      uploadedAt: new Date(),
-      contentType: mimeType,
-    },
-  });
+  const metadata: any = {
+    userId,
+    uploadedAt: new Date(),
+    contentType: mimeType,
+  };
 
+  if (albumId) {
+    metadata.albumId = new mongoose.mongo.ObjectId(albumId);
+  }
+
+  const uploadStream = bucket.openUploadStream(filename, { metadata });
   readStream.pipe(uploadStream);
 
   return new Promise((resolve, reject) => {
-    uploadStream.on("finish", resolve);
+    uploadStream.on("finish", () =>
+      resolve(uploadStream.id as mongoose.mongo.ObjectId),
+    );
     uploadStream.on("error", reject);
   });
 }

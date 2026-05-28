@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
-import bcrypt from "bcrypt";
+import { injectable, inject } from "tsyringe";
 import { Controller, Post, Get, UseMiddleware } from "../decorators/controller";
-import { User } from "../models/User";
-import { generateToken } from "../utils/jwt";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
+import { AuthService } from "../services/AuthService";
+import { logger } from "../logger";
 
 @Controller("/api/auth")
+@injectable()
 export class AuthController {
+  constructor(@inject(AuthService) private authService: AuthService) {}
   @Post("/signup")
   async signup(req: Request, res: Response): Promise<void> {
     try {
@@ -16,29 +18,14 @@ export class AuthController {
         return;
       }
 
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        res.status(400).json({ error: "User already exists" });
+      const result = await this.authService.signup(req.body);
+      res.status(201).json(result);
+    } catch (error: any) {
+      logger.error(`Signup error: ${error.message}`);
+      if (error.message === "User already exists") {
+        res.status(400).json({ error: error.message });
         return;
       }
-
-      const passwordHash = await bcrypt.hash(password, 10);
-      const newUser = new User({ email, username, passwordHash });
-      await newUser.save();
-
-      const token = generateToken({ userId: newUser._id.toString(), email });
-      res.status(201).json({
-        token,
-        user: {
-          id: newUser._id,
-          email,
-          username,
-          storageUsed: newUser.storageUsed,
-          storageLimit: newUser.storageLimit,
-        },
-      });
-    } catch (error) {
-      console.error("Signup error:", error);
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -52,34 +39,14 @@ export class AuthController {
         return;
       }
 
-      const user = await User.findOne({ email });
-      if (!user) {
-        res.status(401).json({ error: "Invalid credentials" });
+      const result = await this.authService.login(req.body);
+      res.json(result);
+    } catch (error: any) {
+      logger.error(`Login error: ${error.message}`);
+      if (error.message === "Invalid credentials") {
+        res.status(401).json({ error: error.message });
         return;
       }
-
-      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-      if (!isPasswordValid) {
-        res.status(401).json({ error: "Invalid credentials" });
-        return;
-      }
-
-      const token = generateToken({
-        userId: user._id.toString(),
-        email: user.email,
-      });
-      res.json({
-        token,
-        user: {
-          id: user._id,
-          email: user.email,
-          username: user.username,
-          storageUsed: user.storageUsed,
-          storageLimit: user.storageLimit,
-        },
-      });
-    } catch (error) {
-      console.error("Login error:", error);
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -88,21 +55,19 @@ export class AuthController {
   @UseMiddleware(authMiddleware)
   async getCurrentUser(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const user = await User.findById(req.userId);
-      if (!user) {
-        res.status(404).json({ error: "User not found" });
+      if (!req.userId) {
+        res.status(401).json({ error: "Unauthorized" });
         return;
       }
 
-      res.json({
-        id: user._id,
-        email: user.email,
-        username: user.username,
-        storageUsed: user.storageUsed,
-        storageLimit: user.storageLimit,
-        avatarUrl: user.avatarUrl,
-      });
-    } catch (error) {
+      const user = await this.authService.getCurrentUser(req.userId);
+      res.json(user);
+    } catch (error: any) {
+      logger.error(`Me error: ${error.message}`);
+      if (error.message === "User not found") {
+        res.status(404).json({ error: error.message });
+        return;
+      }
       res.status(500).json({ error: "Server error" });
     }
   }
